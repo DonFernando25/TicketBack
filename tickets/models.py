@@ -45,6 +45,8 @@ class Ticket(models.Model):
     creado_en = models.DateTimeField(auto_now_add=True)
     actualizado_en = models.DateTimeField(auto_now=True)
     vence_en = models.DateTimeField(null=True, blank=True)
+    es_proyecto = models.BooleanField(default=False, help_text="Marcar si es proyecto a futuro")
+    fecha_cierre = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
         return f"{self.titulo} ({self.get_estado_display()})"
