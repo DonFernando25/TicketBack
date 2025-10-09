@@ -110,6 +110,27 @@ class TicketViewSet(viewsets.ModelViewSet):
         ticket.save()
 
         return Response({"mensaje": "Reunión creada", "evento_id": evento_id})
+    
+    #ACTUALIZAR TICKET (para registrar fecha de cierre)
+    def perform_update(self, serializer):
+        ticket = serializer.save()
+
+        # Si el ticket pasa a RESUELTO o CERRADO, registrar fecha de cierre
+        if ticket.estado in [Ticket.Estado.RESUELTO, Ticket.Estado.CERRADO] and not ticket.fecha_cierre:
+            ticket.fecha_cierre = now()
+            ticket.save()
+
+    #calcular duración del ticket
+    @action(detail=True, methods=["get"])
+    def duracion(self, request, pk=None):
+        ticket = self.get_object()
+        if ticket.fecha_cierre:
+            delta = ticket.fecha_cierre - ticket.creado_en
+            horas = round(delta.total_seconds() / 3600, 2)
+            return Response({"duracion_horas": horas})
+        else:
+            return Response({"mensaje": "El ticket aún no ha sido cerrado."})
+    
 
 
 class ComentarioViewSet(viewsets.ModelViewSet):
@@ -134,25 +155,6 @@ class OrdenKanbanViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
 
-#ACTUALIZAR TICKET (para registrar fecha de cierre)
-def perform_update(self, serializer):
-    ticket = serializer.save()
 
-    # Si el ticket pasa a RESUELTO o CERRADO, registrar fecha de cierre
-    if ticket.estado in [Ticket.Estado.RESUELTO, Ticket.Estado.CERRADO] and not ticket.fecha_cierre:
-        ticket.fecha_cierre = now()
-        ticket.save()
-
-    #calcular duración del ticket
-@action(detail=True, methods=["get"])
-def duracion(self, request, pk=None):
-    ticket = self.get_object()
-    if ticket.fecha_cierre:
-        delta = ticket.fecha_cierre - ticket.creado_en
-        horas = round(delta.total_seconds() / 3600, 2)
-        return Response({"duracion_horas": horas})
-    else:
-        return Response({"mensaje": "El ticket aún no ha sido cerrado."})
-    
 
 
